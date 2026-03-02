@@ -55,6 +55,14 @@
             cursor: pointer;
             pointer-events: auto;
         }
+        
+        /* This class will be added/removed by JavaScript */
+.hotspot.is-playing {
+    background-color: #28a745; /* Green */
+    border-color: #fff;
+    box-shadow: 0 0 15px #28a745;
+    transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
@@ -86,49 +94,48 @@
         let source;
 
         async function initAndPlaySpatialAudio() {
-            // Stop any existing audio first to prevent overlapping sounds
-            StopSpatialAudio();
+    StopSpatialAudio(); // Clear any previous state
 
-            if (!audioContext) {
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            }
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
 
-            panner = audioContext.createPanner();
-            panner.panningModel = 'HRTF';
-            panner.distanceModel = 'inverse';
-            panner.refDistance = 1;
-            panner.maxDistance = 100;
-            panner.rolloffFactor = 1;
+    panner = audioContext.createPanner();
+    // ... (keep your existing panner settings here)
 
-            try {
-                // Ensure filename matches GitHub exactly (Case Sensitive!)
-                const response = await fetch('Black_swan.mp3');
-                const arrayBuffer = await response.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    try {
+        const response = await fetch('Black swan.mp3');
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
-                source = audioContext.createBufferSource();
-                source.buffer = audioBuffer;
-                source.loop = true;
+        source = audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.loop = true;
 
-                source.connect(panner);
-                panner.connect(audioContext.destination);
+        source.connect(panner);
+        panner.connect(audioContext.destination);
 
-                source.start();
-                updateSpatialPosition();
-            } catch (err) {
-                console.error("Audio Load Error: ", err);
-                alert("Audio file not found. Check if 'Black swan.mp3' is uploaded to GitHub.");
-            }
-        }
+        source.start();
 
-        // THE MISSING STOP FUNCTION
-        function StopSpatialAudio() {
-            if (source) {
-                source.stop();
-                source = null; // Clear the variable
-                console.log("Audio Stopped");
-            }
-        }
+        // VISUAL FEEDBACK: Add the green class
+        document.querySelector('.hotspot[slot="hotspot-1"]').classList.add('is-playing');
+
+        updateSpatialPosition();
+    } catch (err) {
+        console.error("Audio Load Error: ", err);
+    }
+}
+
+function StopSpatialAudio() {
+    if (source) {
+        source.stop();
+        source = null;
+        
+        // VISUAL FEEDBACK: Remove the green class
+        document.querySelector('.hotspot[slot="hotspot-1"]').classList.remove('is-playing');
+        console.log("Audio Stopped");
+    }
+}
 
         function updateSpatialPosition() {
             const modelViewer = document.querySelector('#ar-model');
